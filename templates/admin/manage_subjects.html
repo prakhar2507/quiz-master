@@ -1,0 +1,86 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Subjects</h2>
+
+    <!-- Add Subject Button -->
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSubjectModal">Add Subject</button>
+
+    <!-- Subjects Table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Subject Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in subjects %}
+            <tr>
+                <td>{{ subject.id }}</td>
+                <td>{{ subject.name }}</td>
+                    <!-- Edit Button -->
+                    
+                    <!-- Delete Form -->
+                    <td>
+                        <a href="{{ url_for('admin.manage_chapters', subject_id=subject.id) }}" class="btn btn-info btn-sm">
+                            Manage Chapters
+                        </a>
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ subject.id }}">Edit</button>
+                        
+                        <form method="POST" action="{{ url_for('admin.delete_subject', subject_id=subject.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this subject?');">Delete</button>
+                        </form>
+                    </td>           
+            </tr>
+
+            <!-- Edit Subject Modal -->
+            <div class="modal fade" id="editSubjectModal{{ subject.id }}" tabindex="-1" aria-labelledby="editSubjectModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editSubjectModalLabel">Edit Subject</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('admin.edit_subject', subject_id=subject.id) }}">
+                            <div class="modal-body">
+                                <label for="subject_name">Subject Name:</label>
+                                <input type="text" name="subject_name" class="form-control" value="{{ subject.name }}" required>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Save Changes</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Add Subject Modal -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSubjectModalLabel">Add Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('admin.add_subject') }}">
+                    <div class="modal-body">
+                        <label for="subject_name">Subject Name:</label>
+                        <input type="text" name="subject_name" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Subject</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+<!-- add_question_to_quiz.html -->
+{% extends "admin_base.html" %}
+
+{% block content %}
+    <h2>Add Questions to Quiz: {{ quiz.name }}</h2>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="questions">Select Questions:</label>
+            <select name="questions" id="questions" class="form-control" multiple>
+                {% for question in questions %}
+                    <option value="{{ question.id }}">{{ question.question_text }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Questions</button>
+    </form>
+
+    <a href="{{ url_for('admin.manage_quizzes') }}" class="btn btn-secondary mt-3">Back to Quiz List</a>
+{% endblock %}

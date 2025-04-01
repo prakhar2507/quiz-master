@@ -1,0 +1,228 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Manage Quizzes</h2>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addQuizModal">
+            <i class="fas fa-plus-circle"></i> Create Quiz
+        </button>
+    </div>
+
+    <!-- Quizzes Table -->
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Chapter</th>
+                    <th>Subject</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (mins)</th>
+                    <th>Total Marks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in quizzes %}
+                <tr>
+                    <td>{{ quiz.id }}</td>
+                    <td>{{ quiz.name }}</td>
+                    <td>
+                        <form action="{{ url_for('admin.toggle_quiz_status', quiz_id=quiz.id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm {{ 'btn-success' if quiz.active else 'btn-danger' }}">
+                                {{ 'Active' if quiz.active else 'Inactive' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td>{{ quiz.chapter.name if quiz.chapter else 'No Chapter' }}</td>
+                    <td>{{ quiz.chapter.subject.name if quiz.chapter and quiz.chapter.subject else 'No Subject' }}</td>
+                    <td>{{ quiz.start_time.strftime('%Y-%m-%d %H:%M') if quiz.start_time else 'N/A' }}</td>
+                    <td>{{ quiz.end_time.strftime('%Y-%m-%d %H:%M') if quiz.end_time else 'N/A' }}</td>
+                    <td>{{ quiz.duration }}</td>
+                    <td>{{ quiz.max_marks }}</td>
+                    <td class="text-center">
+                        <div class="d-flex flex-column">
+                            <button class="btn btn-warning btn-sm mb-1 w-100" data-bs-toggle="modal" data-bs-target="#editQuizModal{{ quiz.id }}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <form action="{{ url_for('admin.delete_quiz', quiz_id=quiz.id) }}" method="POST">
+                                <button type="submit" class="btn btn-danger btn-sm mb-1 w-100" onclick="return confirm('Are you sure?')">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                            <a href="{{ url_for('admin.add_question_to_quiz', quiz_id=quiz.id) }}" class="btn btn-info btn-sm mb-1 w-100">
+                                <i class="fas fa-plus"></i> Add Questions
+                            </a>
+                            <a href="{{ url_for('admin.preview_quiz', quiz_id=quiz.id) }}" class="btn btn-secondary btn-sm w-100">
+                                <i class="fas fa-eye"></i> Preview
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Edit Quiz Modal -->
+                <div class="modal fade" id="editQuizModal{{ quiz.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Edit Quiz</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form method="POST" action="{{ url_for('admin.edit_quiz', quiz_id=quiz.id) }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Quiz Name</label>
+                                        <input type="text" class="form-control" name="name" value="{{ quiz.name }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description">{{ quiz.description }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Subject</label>
+                                        <select class="form-control subject-dropdown" name="subject_id" data-quiz-id="{{ quiz.id }}" required>
+                                            <option value="">-- Select Subject --</option>
+                                            {% for subject in subjects %}
+                                                <option value="{{ subject.id }}" {% if quiz.chapter and quiz.chapter.subject.id == subject.id %}selected{% endif %}>
+                                                    {{ subject.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Chapter</label>
+                                        <select class="form-control chapter-dropdown" name="chapter_id" id="chapterDropdown{{ quiz.id }}" required>
+                                            <option value="">-- Select Chapter --</option>
+                                            {% if quiz.chapter %}
+                                                {% for chapter in quiz.chapter.subject.chapters %}
+                                                    <option value="{{ chapter.id }}" {% if chapter.id == quiz.chapter.id %}selected{% endif %}>
+                                                        {{ chapter.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Start Time</label>
+                                        <input type="datetime-local" class="form-control" name="start_time" value="{{ quiz.start_time.strftime('%Y-%m-%dT%H:%M') if quiz.start_time else '' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">End Time</label>
+                                        <input type="datetime-local" class="form-control" name="end_time" value="{{ quiz.end_time.strftime('%Y-%m-%dT%H:%M') if quiz.end_time else '' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Duration (mins)</label>
+                                        <input type="number" class="form-control" name="duration" value="{{ quiz.duration }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Total Marks</label>
+                                        <input type="number" class="form-control" name="total_marks" value="{{ quiz.max_marks }}">
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100">Update Quiz</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Quiz Modal -->
+<div class="modal fade" id="addQuizModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Create New Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin.add_quiz') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Quiz Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Subject</label>
+                        <select class="form-control subject-dropdown" id="subjectDropdown" name="subject_id" required>
+                            <option value="">-- Select Subject --</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Chapter</label>
+                        <select class="form-control chapter-dropdown" id="chapterDropdown" name="chapter_id" required>
+                            <option value="">-- Select Chapter --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="datetime-local" class="form-control" name="start_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Time</label>
+                        <input type="datetime-local" class="form-control" name="end_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Duration (mins)</label>
+                        <input type="number" class="form-control" name="duration" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Marks</label>
+                        <input type="number" class="form-control" name="total_marks" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Create Quiz</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to Load Chapters Dynamically -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".subject-dropdown").forEach(function(subjectDropdown) {
+            subjectDropdown.addEventListener("change", function() {
+                var subjectId = this.value;
+                var quizId = this.getAttribute('data-quiz-id');
+                var chapterDropdown = quizId ? document.getElementById(`chapterDropdown${quizId}`) : document.getElementById('chapterDropdown');
+    
+                if (subjectId) {
+                    fetch(`/get_chapters/${subjectId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            chapterDropdown.innerHTML = '<option value="">-- Select Chapter --</option>';
+                            data.chapters.forEach(chapter => {
+                                let option = document.createElement("option");
+                                option.value = chapter.id;
+                                option.textContent = chapter.name;
+                                chapterDropdown.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error fetching chapters:', error));
+                } else {
+                    chapterDropdown.innerHTML = '<option value="">-- Select Chapter --</option>';
+                }
+            });
+    
+            // Auto-trigger for Edit Quiz modals to populate existing data
+            if (subjectDropdown.value) {
+                subjectDropdown.dispatchEvent(new Event('change'));
+            }
+        });
+    });    
+</script>
+
+{% endblock %}

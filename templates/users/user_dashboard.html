@@ -1,0 +1,76 @@
+{% extends 'user_base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="fw-bold">Welcome, {{ user.full_name }}</h2>
+
+    <!-- User Information -->
+    <div class="card p-3 mb-4">
+        <h4>Your Details</h4>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Joined On:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+    </div>
+
+    <!-- Available Quizzes -->
+    <div class="card p-3 mb-4">
+        <h4>Available Quizzes</h4>
+        {% if quizzes %}
+            <ul class="list-group">
+                {% for quiz in quizzes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ quiz.name }}</strong> ({{ quiz.chapter.subject.name }} - {{ quiz.chapter.name }})
+                            <div class="text-muted small">
+                                <span>Start: {{ quiz.start_time.strftime('%Y-%m-%d %H:%M') }}</span> | 
+                                <span>End: {{ quiz.end_time.strftime('%Y-%m-%d %H:%M') }}</span> | 
+                                <span>Duration: {{ quiz.duration }} mins</span>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('user.attempt_quiz', quiz_id=quiz.id) }}" 
+                        class="btn btn-primary btn-sm {% if not quiz.active %}disabled{% endif %}">
+                            <i class="fas fa-play"></i> Attempt Quiz
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No quizzes available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Previous Quiz Scores -->
+    <div class="card p-3 mb-4">
+        <h4>Your Quiz Scores</h4>
+        {% if scores %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Quiz</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score, max_marks in scores %}
+                    <tr>
+                        <td>{{ score.quiz.name }}</td>
+                        <td>
+                            {% if max_marks %}
+                                {{ (score.total_score / max_marks * 100) | round(2) }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ score.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">No quiz attempts yet.</p>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+</div>
+{% endblock %}

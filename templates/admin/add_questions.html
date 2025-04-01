@@ -1,0 +1,54 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="fw-bold">Add Questions to Quiz</h2>
+    
+    <div class="card p-3 mb-4">
+        <h4 class="fw-bold">{{ quiz.name }}</h4>
+        <p><strong>Subject:</strong> {{ quiz.chapter.subject.name }}</p>
+        <p><strong>Chapter:</strong> {{ quiz.chapter.name }}</p>
+    </div>
+
+    {% if questions %}
+    <form method="POST">
+        <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Question</th>
+                    <th>Option A</th>
+                    <th>Option B</th>
+                    <th>Option C</th>
+                    <th>Option D</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in questions %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="question_ids" value="{{ question.id }}">
+                    </td>
+                    <td>{{ question.question_text }}</td>
+                    <td>{{ question.option_a }}</td>
+                    <td>{{ question.option_b }}</td>
+                    <td>{{ question.option_c }}</td>
+                    <td>{{ question.option_d }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary w-100">Add Selected Questions</button>
+    </form>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        No questions available for this chapter.
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('admin.manage_quizzes') }}" class="btn btn-secondary mt-3">Back to Manage Quizzes</a>
+</div>
+{% endblock %}
